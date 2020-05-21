@@ -1,12 +1,14 @@
 package work.kcs_labo.typewriter_view
 
+import android.animation.Animator
+import android.animation.AnimatorInflater
 import android.content.Context
 import android.content.res.TypedArray
 import android.os.Handler
 import android.util.AttributeSet
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.annotation.AnimRes
+import androidx.annotation.AnimatorRes
 import androidx.annotation.Dimension
 
 class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs, 0) {
@@ -15,21 +17,27 @@ class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(conte
     attrs, R.styleable.TypewriterView, 0, 0
   )
 
-  private val delayMilliTime: Long
-  private val angle: Int
-  @AnimRes
-  private val interpolator: Int
+  private val delayTime: Long
+
+  @AnimatorRes
+  private val animatorRes: Int
+  private val _animator: Animator
+  private val animators: List<Animator>
+
   @Dimension
   private val textSize: Float
   private val chars: CharSequence
 
   init {
     try {
-      delayMilliTime = typedArray.getInteger(R.styleable.TypewriterView_delayMilliTime, 0).toLong()
-      angle = typedArray.getInteger(R.styleable.TypewriterView_angle, 0)
-      interpolator = typedArray.getResourceId(R.styleable.TypewriterView_android_interpolator, -1)
+      delayTime = typedArray.getInt(R.styleable.TypewriterView_delayTime, 0).toLong()
+      animatorRes = typedArray.getResourceId(R.styleable.TypewriterView_animator, -1)
+      _animator = AnimatorInflater.loadAnimator(context, animatorRes)
+
       textSize = typedArray.getDimension(R.styleable.TypewriterView_android_textSize, 12f)
       chars = typedArray.getString(R.styleable.TypewriterView_android_text) ?: ""
+
+      animators = List(chars.length) { _animator.clone()}
     } finally {
       typedArray.recycle()
     }
@@ -40,12 +48,13 @@ class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(conte
   private var charAdder = object : Runnable {
     override fun run() {
       val tv = TextView(context, attrs)
-      tv.text = chars.subSequence(index, ++index)
-      println(tv.text)
+      animators[index].setTarget(tv)
+      tv.text = chars.subSequence(index, index + 1)
       tv.textSize = textSize
       this@TypewriterView.addView(tv)
-      if (index < chars.length) {
-        mHandler.postDelayed(this, delayMilliTime)
+      animators[index].start()
+      if (++index < chars.length) {
+        mHandler.postDelayed(this, delayTime)
       }
     }
   }
@@ -53,5 +62,10 @@ class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(conte
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
     charAdder.run()
+  }
+
+  private fun convertPx2Dp(context: Context, pixel: Int): Int {
+    val metrics = context.resources.displayMetrics
+    return (pixel / metrics.density).toInt()
   }
 }

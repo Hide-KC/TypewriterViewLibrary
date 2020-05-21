@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <declare-styleable name="TypewriterView">
-    <attr name="delayMilliTime" format="integer"/>
-    <attr name="angle" format="integer"/>
-    <attr name="android:interpolator" format="reference"/>
+    <attr name="delayTime" format="integer"/>
+    <attr name="animator" format="reference"/>
     <attr name="android:textSize" format="dimension"/>
     <attr name="android:text" format="string"/>
   </declare-styleable>
