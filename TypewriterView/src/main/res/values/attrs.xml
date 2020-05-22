@@ -4,6 +4,7 @@
     <attr name="delayTime" format="integer"/>
     <attr name="animator" format="reference"/>
     <attr name="android:textSize" format="dimension"/>
+    <attr name="android:textColor" format="reference"/>
     <attr name="android:text" format="string"/>
   </declare-styleable>
 </resources>

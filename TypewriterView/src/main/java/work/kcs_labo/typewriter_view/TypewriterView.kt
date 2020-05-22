@@ -4,11 +4,13 @@ import android.animation.Animator
 import android.animation.AnimatorInflater
 import android.content.Context
 import android.content.res.TypedArray
+import android.graphics.Color
 import android.os.Handler
 import android.util.AttributeSet
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.AnimatorRes
+import androidx.annotation.ColorInt
 import androidx.annotation.Dimension
 
 class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs, 0) {
@@ -28,6 +30,9 @@ class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(conte
   private val textSize: Float
   private val chars: CharSequence
 
+  @ColorInt
+  private val textColorRes: Int
+
   init {
     try {
       delayTime = typedArray.getInt(R.styleable.TypewriterView_delayTime, 0).toLong()
@@ -37,7 +42,9 @@ class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(conte
       textSize = typedArray.getDimension(R.styleable.TypewriterView_android_textSize, 12f)
       chars = typedArray.getString(R.styleable.TypewriterView_android_text) ?: ""
 
-      animators = List(chars.length) { _animator.clone()}
+      textColorRes = typedArray.getColor(R.styleable.TypewriterView_android_textColor, Color.DKGRAY)
+
+      animators = List(chars.length) { _animator.clone() }
     } finally {
       typedArray.recycle()
     }
@@ -51,6 +58,7 @@ class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(conte
       animators[index].setTarget(tv)
       tv.text = chars.subSequence(index, index + 1)
       tv.textSize = textSize
+      tv.setTextColor(textColorRes)
       this@TypewriterView.addView(tv)
       animators[index].start()
       if (++index < chars.length) {
