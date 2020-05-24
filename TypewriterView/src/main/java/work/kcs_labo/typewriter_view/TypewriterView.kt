@@ -54,7 +54,7 @@ class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(conte
   private var index = 0
   private var charAdder = object : Runnable {
     override fun run() {
-      val tv = TextView(context, attrs)
+      val tv = TextView(context)
       animators[index].setTarget(tv)
       tv.text = chars.subSequence(index, index + 1)
       tv.textSize = textSize
