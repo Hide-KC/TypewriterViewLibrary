@@ -13,12 +13,14 @@ import androidx.annotation.AnimatorRes
 import androidx.annotation.ColorInt
 import androidx.annotation.Dimension
 
+
 class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs, 0) {
 
   private val typedArray: TypedArray = context.theme.obtainStyledAttributes(
     attrs, R.styleable.TypewriterView, 0, 0
   )
 
+  private val interval: Long
   private val delayTime: Long
 
   @AnimatorRes
@@ -35,6 +37,7 @@ class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(conte
 
   init {
     try {
+      interval = typedArray.getInt(R.styleable.TypewriterView_interval, 0).toLong()
       delayTime = typedArray.getInt(R.styleable.TypewriterView_delayTime, 0).toLong()
       animatorRes = typedArray.getResourceId(R.styleable.TypewriterView_animator, -1)
       _animator = AnimatorInflater.loadAnimator(context, animatorRes)
@@ -62,14 +65,16 @@ class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(conte
       this@TypewriterView.addView(tv)
       animators[index].start()
       if (++index < chars.length) {
-        mHandler.postDelayed(this, delayTime)
+        mHandler.postDelayed(this, interval)
       }
     }
   }
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
-    charAdder.run()
+    Handler().postDelayed({
+      charAdder.run()
+    }, delayTime)
   }
 
   private fun convertPx2Dp(context: Context, pixel: Int): Int {
