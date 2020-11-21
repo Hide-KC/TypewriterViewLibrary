@@ -72,9 +72,10 @@ class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(conte
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
-    Handler().postDelayed({
-      charAdder.run()
-    }, delayTime)
+    val tv = TextView(context)
+    tv.textSize = textSize
+    this.addView(tv)
+    Handler().postDelayed({ charAdder.run() }, delayTime)
   }
 
   private fun convertPx2Dp(context: Context, pixel: Int): Int {
