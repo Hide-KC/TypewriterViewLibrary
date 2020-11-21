@@ -12,6 +12,8 @@ import android.widget.TextView
 import androidx.annotation.AnimatorRes
 import androidx.annotation.ColorInt
 import androidx.annotation.Dimension
+import androidx.annotation.FontRes
+import androidx.core.content.res.ResourcesCompat
 
 
 class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs, 0) {
@@ -35,6 +37,9 @@ class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(conte
   @ColorInt
   private val textColorRes: Int
 
+  @FontRes
+  private val fontFamilyRes: Int
+
   init {
     try {
       interval = typedArray.getInt(R.styleable.TypewriterView_interval, 0).toLong()
@@ -48,6 +53,8 @@ class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(conte
       textColorRes = typedArray.getColor(R.styleable.TypewriterView_android_textColor, Color.DKGRAY)
 
       animators = List(chars.length) { _animator.clone() }
+
+      fontFamilyRes = typedArray.getResourceId(R.styleable.TypewriterView_android_fontFamily, -1)
     } finally {
       typedArray.recycle()
     }
@@ -62,6 +69,11 @@ class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(conte
       tv.text = chars.subSequence(index, index + 1)
       tv.textSize = textSize
       tv.setTextColor(textColorRes)
+      if (fontFamilyRes != -1) {
+        ResourcesCompat.getFont(context, fontFamilyRes)?.also {
+          tv.typeface = it
+        }
+      }
       this@TypewriterView.addView(tv)
       animators[index].start()
       if (++index < chars.length) {
