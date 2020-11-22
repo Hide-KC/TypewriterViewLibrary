@@ -2,6 +2,7 @@ package work.kcs_labo.typewriter_view
 
 import android.animation.Animator
 import android.animation.AnimatorInflater
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.TypedArray
 import android.graphics.Color
@@ -14,6 +15,7 @@ import androidx.annotation.ColorInt
 import androidx.annotation.Dimension
 import androidx.annotation.FontRes
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.get
 
 
 class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs, 0) {
@@ -69,12 +71,28 @@ class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(conte
       tv.text = chars.subSequence(index, index + 1)
       tv.textSize = textSize
       tv.setTextColor(textColorRes)
+      tv.tag = "tmpTxt"
       if (fontFamilyRes != -1) {
         ResourcesCompat.getFont(context, fontFamilyRes)?.also {
           tv.typeface = it
         }
       }
       this@TypewriterView.addView(tv)
+      animators[index].addListener(object : Animator.AnimatorListener {
+        override fun onAnimationStart(p0: Animator?) {}
+        override fun onAnimationCancel(p0: Animator?) {}
+        override fun onAnimationRepeat(p0: Animator?) {}
+
+        @SuppressLint("SetTextI18n")
+        override fun onAnimationEnd(p0: Animator?) {
+          (this@TypewriterView[0] as TextView).also {
+            val txt = it.text.toString()
+            it.text = txt + tv.text.toString()
+          }
+          val tmp = this@TypewriterView.findViewWithTag<TextView>("tmpTxt")
+          this@TypewriterView.removeView(tmp)
+        }
+      })
       animators[index].start()
       if (++index < chars.length) {
         mHandler.postDelayed(this, interval)
@@ -86,6 +104,12 @@ class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(conte
     super.onAttachedToWindow()
     val tv = TextView(context)
     tv.textSize = textSize
+    tv.setTextColor(textColorRes)
+    if (fontFamilyRes != -1) {
+      ResourcesCompat.getFont(context, fontFamilyRes)?.also {
+        tv.typeface = it
+      }
+    }
     this.addView(tv)
     Handler().postDelayed({ charAdder.run() }, delayTime)
   }
