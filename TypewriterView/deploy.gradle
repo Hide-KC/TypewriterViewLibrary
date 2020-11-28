@@ -5,7 +5,7 @@ apply plugin: 'com.jfrog.bintray'
 ext {
   libGroupId = "work.kcs_labo"
   libArtifactId = project.name //モジュール名（project.name）を指定
-  libVersion = "0.1.1"
+  libVersion = "0.2.0"
   pkgName = 'TypewriterViewLibrary'
   libDescription = 'Custom animated TextView like Typewriter.'
   devId = 'hide-kc'

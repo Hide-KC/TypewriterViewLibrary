@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <declare-styleable name="TypewriterView">
-    <attr name="delayTime" format="integer"/>
     <attr name="interval" format="integer"/>
     <attr name="animator" format="reference"/>
     <attr name="android:fontFamily" format="reference"/>

@@ -18,14 +18,15 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.get
 
 
-class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs, 0) {
+class TypewriterView(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
+  LinearLayout(context, attrs, defStyleAttr) {
+  constructor(context: Context) : this(context, null)
+  constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
 
-  private val typedArray: TypedArray = context.theme.obtainStyledAttributes(
-    attrs, R.styleable.TypewriterView, 0, 0
-  )
+  private val typedArray: TypedArray =
+    context.theme.obtainStyledAttributes(attrs, R.styleable.TypewriterView, 0, 0)
 
   private val interval: Long
-  private val delayTime: Long
 
   @AnimatorRes
   private val animatorRes: Int
@@ -42,10 +43,11 @@ class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(conte
   @FontRes
   private val fontFamilyRes: Int
 
+  private var lastAnimator: Animator? = null
+
   init {
     try {
       interval = typedArray.getInt(R.styleable.TypewriterView_interval, 0).toLong()
-      delayTime = typedArray.getInt(R.styleable.TypewriterView_delayTime, 0).toLong()
       animatorRes = typedArray.getResourceId(R.styleable.TypewriterView_animator, -1)
       _animator = AnimatorInflater.loadAnimator(context, animatorRes)
 
@@ -66,18 +68,13 @@ class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(conte
   private var index = 0
   private var charAdder = object : Runnable {
     override fun run() {
-      val tv = TextView(context)
-      animators[index].setTarget(tv)
-      tv.text = chars.subSequence(index, index + 1)
-      tv.textSize = textSize
-      tv.setTextColor(textColorRes)
-      tv.tag = "tmpTxt"
-      if (fontFamilyRes != -1) {
-        ResourcesCompat.getFont(context, fontFamilyRes)?.also {
-          tv.typeface = it
-        }
+      val addedTextView = createTextView().also {
+        animators[index].setTarget(it)
+        it.text = chars.subSequence(index, index + 1)
+        it.tag = "addedTextView"
+        this@TypewriterView.addView(it)
       }
-      this@TypewriterView.addView(tv)
+
       animators[index].addListener(object : Animator.AnimatorListener {
         override fun onAnimationStart(p0: Animator?) {}
         override fun onAnimationCancel(p0: Animator?) {}
@@ -86,36 +83,45 @@ class TypewriterView(context: Context, attrs: AttributeSet) : LinearLayout(conte
         @SuppressLint("SetTextI18n")
         override fun onAnimationEnd(p0: Animator?) {
           (this@TypewriterView[0] as TextView).also {
-            val txt = it.text.toString()
-            it.text = txt + tv.text.toString()
+            it.text = it.text.toString() + addedTextView.text.toString()
           }
-          val tmp = this@TypewriterView.findViewWithTag<TextView>("tmpTxt")
-          this@TypewriterView.removeView(tmp)
+          val removeTarget = this@TypewriterView.findViewWithTag<TextView>("addedTextView")
+          this@TypewriterView.removeView(removeTarget)
         }
       })
       animators[index].start()
       if (++index < chars.length) {
         mHandler.postDelayed(this, interval)
+      } else {
+        onAllAnimationFinished()
       }
     }
   }
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
-    val tv = TextView(context)
-    tv.textSize = textSize
-    tv.setTextColor(textColorRes)
-    if (fontFamilyRes != -1) {
-      ResourcesCompat.getFont(context, fontFamilyRes)?.also {
-        tv.typeface = it
-      }
-    }
-    this.addView(tv)
-    Handler().postDelayed({ charAdder.run() }, delayTime)
+    this.addView(createTextView())
   }
 
-  private fun convertPx2Dp(context: Context, pixel: Int): Int {
-    val metrics = context.resources.displayMetrics
-    return (pixel / metrics.density).toInt()
+  fun startTypewriter(delayMillis: Long = 0) {
+    Handler().postDelayed({ charAdder.run() }, delayMillis)
+  }
+
+  fun setAnimationAfterTypeWriterAnimation(animator: Animator?) {
+    lastAnimator = animator
+  }
+
+  private fun createTextView() = TextView(context).also {
+    it.textSize = textSize
+    it.setTextColor(textColorRes)
+    if (fontFamilyRes != -1) {
+      ResourcesCompat.getFont(context, fontFamilyRes)?.also { tf ->
+        it.typeface = tf
+      }
+    }
+  }
+
+  private fun onAllAnimationFinished() {
+    lastAnimator?.start()
   }
 }
